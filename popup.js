@@ -1,9 +1,19 @@
 const noteList = document.getElementById('noteList');
 
 const displayNotes = (notes) => {
-  noteList.innerHTML = notes.map((note) => 
-    `<div>${note}</div>`
+  noteList.innerHTML = notes.map((note, index) => 
+    `<div>${note}</div><button class='deleteBtn' data-index="${index}">Delete</button>`
   ).join('');
+
+  const deleteButtons = document.querySelectorAll('.deleteBtn');
+  deleteButtons.forEach(button => button.addEventListener('click', () => {
+    const index = button.dataset.index;
+    notes.splice(index, 1);
+    
+    chrome.storage.local.set({ notes: notes }).then(() => {
+      displayNotes(notes);
+    });
+  }));
 };
 
 document.getElementById('saveBtn').addEventListener('click', () => {
