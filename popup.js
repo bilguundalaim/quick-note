@@ -1,8 +1,11 @@
+const textArea = document.getElementById('noteArea');
 const noteList = document.getElementById('noteList');
+const saveButton = document.getElementById('saveBtn');
+let editingIndex = null;
 
 const displayNotes = (notes) => {
   noteList.innerHTML = notes.map((note, index) => 
-    `<div>${note}</div><button class='deleteBtn' data-index="${index}">Delete</button>`
+    `<div>${note}</div><button class='deleteBtn' data-index="${index}">Delete</button><button class='editBtn' data-index="${index}">Edit</button>`
   ).join('');
 
   const deleteButtons = document.querySelectorAll('.deleteBtn');
@@ -14,16 +17,31 @@ const displayNotes = (notes) => {
       displayNotes(notes);
     });
   }));
+
+  const editButtons = document.querySelectorAll('.editBtn');
+  editButtons.forEach(button => button.addEventListener('click', () => {
+    const index = button.dataset.index;
+    textArea.value = notes[index];
+    saveButton.textContent = 'Update';
+    editingIndex = index;
+    textArea.focus();
+  }));
 };
 
-document.getElementById('saveBtn').addEventListener('click', () => {
-  const textArea = document.getElementById('noteArea');
+saveButton.addEventListener('click', () => {
   const text = textArea.value
   if (!text) return;
 
   chrome.storage.local.get(["notes"]).then((result) => {
     const notes = result.notes || [];
-    notes.push(text);
+
+    if (editingIndex === null) {
+      notes.push(text);
+    } else {
+      notes[editingIndex] = text;
+      saveButton.textContent = 'Save';
+      editingIndex = null;
+    }
 
     chrome.storage.local.set({ notes: notes }).then(() => {
       console.log("Note saved");
